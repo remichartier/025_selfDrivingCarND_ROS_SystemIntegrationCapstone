@@ -79,6 +79,7 @@ from styx_msgs.msg import Lane, Waypoint
 import math
 
 from scipy.spatial import KDTree
+import numpy as np
 
 '''
 This node will publish waypoints from the car's current position to some `x` distance ahead.
@@ -111,13 +112,15 @@ class WaypointUpdater(object):
         self.final_waypoints_pub = rospy.Publisher('final_waypoints', Lane, queue_size=1)
         
         # TODO: Add other member variables you need below
-        self.pose = none
-        self.base_waypoints = none
-        self.waypoints_2d = none
-        self.waypoints_tree = none
+        self.pose = None
+        self.base_waypoints = None
+        self.waypoints_2d = None
+        self.waypoints_tree = None
         
         # rospy.spin()
-        self.loop() ''' We've defined a loop function, because this gives us control over
+        self.loop() 
+        ''' 
+        We've defined a loop function, because this gives us control over
         the publishing frequency. So we want to target 50 Hz. You could probably get away
         with something little less that 50Hz in this case. The final_waypoints we will be 
         publishing go to the waypoints_follower onto the DBW, which is a piece of code from Autoware, 
@@ -126,7 +129,7 @@ class WaypointUpdater(object):
         '''    
     
     def loop(self):
-        rate = rospy.rate(50)
+        rate = rospy.Rate(50)
         while not rospy.is_shutdown():
             if self.pose and self.base_waypoints:
                 '''if we have self.pose and self.base_waypoints,
@@ -175,7 +178,7 @@ class WaypointUpdater(object):
         lane message, lane header same as base_waypoints header, it does not really matter,
         we're not going to use the header ... and then fill the waypoints for that lane, starting
         by the closes_idx to the next LOOKAHEAD_WPS waypoints '''
-        lane = lane()
+        lane = Lane()
         lane.header = self.base_waypoints.header
         '''Do we have to worry about doing a modular in case it goes over the length of waypoints ?
         we don't because Python slicing is really nice, so if closest index + LOOKAHEAD waypoints
@@ -192,16 +195,20 @@ class WaypointUpdater(object):
 
     def waypoints_cb(self, waypoints):
         # TODO: Implement
-        self.base_waypoints = waypoints ''' store coming waypoints in the object. Latched subscriber, 
+        self.base_waypoints = waypoints 
+        ''' store coming waypoints in the object. Latched subscriber, 
          so once the call back is called, it does not send the base_waypoints anymore.
          This is good and ok because the base_waypoints are never changing.
          Basic idea : want to take a chunk of theses waypoints, and use the first 200 that are
          in the front of the car as a reference.
-        '''
+         '''
+        
         # Use KDTree data structure to search the closest point in space really efficiently
-        if not self.waypoints_2d: ''' Because we want to make sure that self.waypoints_2d is initialized before 
+        if not self.waypoints_2d: 
+            ''' Because we want to make sure that self.waypoints_2d is initialized before 
              the subscriber is otherwise could run into risky conditions where the subscriber callback is called 
-             before self.waypoints_2d is initialized, otherwise it would not know what to reference'''
+             before self.waypoints_2d is initialized, otherwise it would not know what to reference
+             '''
             self.waypoints_2d = [[waypoint.pose.pose.position.x, waypoint.pose.pose.position.y] for waypoint in waypoints.waypoints]
             self.waypoint_tree = KDTree(self.waypoints_2d)
 
