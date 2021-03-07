@@ -1,4 +1,21 @@
 #!/usr/bin/env python
+'''
+Notes from Project Lesson : 
+
+Note: The below section regarding adding in traffic light classification is an optional, stand out suggestion for the project. We of course encourage you to at least make an attempt at a working traffic light classifier, but it is not required for passing the project. You can just pull in the light information directly from the simulator to perform stop and go actions at intersections, if desired.
+
+You will build both a traffic light detection node and a traffic light classification node. Traffic light detection should take place within tl_detector.py, whereas traffic light classification should take place within ../tl_detector/light_classification_model/tl_classfier.py.
+
+Suggested Order of Project Development
+Because you will be writing code across several packages with some nodes depending on messages published by other nodes, we suggest completing the project in the following order:
+
+1. Waypoint Updater Node (Partial): Complete a partial waypoint updater which subscribes to /base_waypoints and /current_pose and publishes to /final_waypoints.
+2. DBW Node: Once your waypoint updater is publishing /final_waypoints, the waypoint_follower node will start publishing messages to the/twist_cmd topic. At this point, you have everything needed to build the dbw_node. After completing this step, the car should drive in the simulator, ignoring the traffic lights.
+3. Traffic Light Detection: This can be split into 2 parts:
+- (Optional) Detection: Detect the traffic light and its color from the /image_color. The topic /vehicle/traffic_lights contains the exact location and status of all traffic lights in simulator, so you can test your output.
+- Waypoint publishing: Once you have correctly identified the traffic light and determined its position, you can convert it to a waypoint index and publish it.
+'''
+
 import rospy
 from std_msgs.msg import Int32
 from geometry_msgs.msg import PoseStamped, Pose
