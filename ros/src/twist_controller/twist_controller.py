@@ -12,6 +12,11 @@ Additional notes from project lesson :
 - Within this class, you can import and use the provided pid.py and lowpass.py if needed for acceleration, and yaw_controller.py for steering. 
 - Note that it is not required for you to use these, and you are free to write and import other controllers.
 
+    • We are provided with a Yaw controller. For helping with the steering.
+    • So we can get steering commands from the Yaw controller, and you need to put in the wheel_base, steering ratio, 
+    • 0.1 is the lowest speed of the car in meters per second.
+    • And then the max lateral acceleration and the max steering angle.
+    • All of those are parameters that we passed in dbw.py so you just need to forward them to the yaw controller.
 '''
 
 GAS_DENSITY = 2.858
@@ -19,7 +24,9 @@ ONE_MPH = 0.44704
 
 
 class Controller(object):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, vehicle_mass, fuel_capacity, brake_deadband,decel_limit,
+                 accel_limit, wheel_radius, wheel_base,
+                 steer_ratio, max_lat_accel, max_steer_angle):
         # TODO: Implement
         pass
 
