@@ -54,7 +54,7 @@ class Controller(object):
         '''
         tau = 0.5 # 1/(2*Pi*Tau) = Cut Off Frequency
         ts = 0.2 # Sample time
-        self.vel_lps = LowPassFilter(tau, ts)
+        self.vel_lpf = LowPassFilter(tau, ts)
         
         ''' 
         Things that we might need or we might not need
@@ -91,5 +91,61 @@ class Controller(object):
         because, then when we'll turn the DbW Node back on, you'll have accumulated all this
         error and the car might do something really erratic.
         '''
+        if not dbw_enabled:
+            self.throttle_controller.reset()
+            return 0.0, 0.0, 0.0
+        
+        ''' Otherwise, look at current velocity, and steering we're getting from
+        this yaw_controller and we're checking out this velocity error, so where
+        do we want to be versus where we're currently at.
+        We have this last velocity as well.
+        '''
+        
+        current_vel = self.vel_lpf.filt(current_vel)
+        
+        steering = self.yaw_controller.get_steering(linear_vel, angular_vel, current_vel)
+        
+        vel_error = linear_vel - current_vel
+        self.last_vel = current_vel
+        
+        # Here we start doing some physics
+        
+        self.current_time = rospy.get_time()
+        sample_time = current_time - self.last_time
+        self.last_time = current_time
+        
+        # For throttle, we're stepping through our throttle controller using the PID controller
+        throttle = self.throttle_controller.step(vel_error, sample_time)
+        
+        ''' Initially we're setting brake to 0. And now we're doing a check here.
+        If our target linear velocity (val) is 0, and we're going very slow,
+        So our current velocity is less than 0.1, we should probably be trying to stop.
+        So what we're going to do is set throttle to 0 and apply a lot of brake.
+        '''
+        '''Note
+        In the walkthrough, only 400 Nm of torque is applied to hold the vehicle stationary. This turns out to be slightly less than
+        the amount of force needed, and Carla will roll forward with only 400Nm of torque. To prevent Carla from moving you should
+        apply approximately 700 Nm of torque.
+'''
+        brake = 0
+        
+        if linear_vel == 0 and current_vel < 0.1 :
+            throttle = 0
+            brake = 400 #400 # N * m; to hold the car in place, If we are stopped at a light
+                            # Acceleration - 1m/s2
+        '''
+        Or else throttle also really small and velocity error < 0
+        which means we're going faster than we want to be, ie faster than our target velocity,
+        And our PID is letting up on the throttle but we want to slow down, throttle < 0.1,
+        This time we're not just hard coding the break to 400Nm, but we're using deceleration
+        (ie the amount we want to decelerate) *
+        vehicle_mass * wheel_radius, that gives us the Torque that we want.
+        vehicle_mass in kilograms, wheel_radius in meters, 
+        '''
+        elif throttle < 0.1 and vel_error < 0 :
+            throttle = 0
+            decel = max(vel_error, self.decel_limit)
+            brake = abs(decel) * self.vehicle_mass * self.wheel_radius # Torque N*m
         
         # return 1., 0., 0. # if want to Sanity check and check the car is moving forward
+        return throttle, brake, steering
