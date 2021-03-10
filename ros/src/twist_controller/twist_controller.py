@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 '''
 Notes from project lesson :
 ===========================
@@ -14,6 +16,9 @@ Additional notes from project lesson :
 
  
 '''
+from yaw_controller import YawController
+from pid import PID
+from lowpass import LowPassFilter
 
 GAS_DENSITY = 2.858
 ONE_MPH = 0.44704
@@ -32,7 +37,7 @@ class Controller(object):
         • All of those are parameters that we passed in dbw.py so you just need to forward them to the yaw controller.
         '''
         # Yaw Controller :
-        self.yaw_controller = YawController(wheel_base, steer_ratio, min_speed=0.1, max_lat_accel, max_steer_angle)
+        self.yaw_controller = YawController(wheel_base, steer_ratio, 0.1, max_lat_accel, max_steer_angle)
         
         # PID Controller for the Throttle : 
         '''
@@ -126,22 +131,22 @@ class Controller(object):
         In the walkthrough, only 400 Nm of torque is applied to hold the vehicle stationary. This turns out to be slightly less than
         the amount of force needed, and Carla will roll forward with only 400Nm of torque. To prevent Carla from moving you should
         apply approximately 700 Nm of torque.
-'''
+        '''
         brake = 0
         
         if linear_vel == 0 and current_vel < 0.1 :
             throttle = 0
             brake = 400 #400 # N * m; to hold the car in place, If we are stopped at a light
-                            # Acceleration - 1m/s2
-        '''
-        Or else throttle also really small and velocity error < 0
-        which means we're going faster than we want to be, ie faster than our target velocity,
-        And our PID is letting up on the throttle but we want to slow down, throttle < 0.1,
-        This time we're not just hard coding the break to 400Nm, but we're using deceleration
-        (ie the amount we want to decelerate) *
-        vehicle_mass * wheel_radius, that gives us the Torque that we want.
-        vehicle_mass in kilograms, wheel_radius in meters, 
-        '''
+            # Acceleration - 1m/s2
+            '''
+            Or else throttle also really small and velocity error < 0
+            which means we're going faster than we want to be, ie faster than our target velocity,
+            And our PID is letting up on the throttle but we want to slow down, throttle < 0.1,
+            This time we're not just hard coding the break to 400Nm, but we're using deceleration
+            (ie the amount we want to decelerate) *
+            vehicle_mass * wheel_radius, that gives us the Torque that we want.
+            vehicle_mass in kilograms, wheel_radius in meters, 
+            '''
         elif throttle < 0.1 and vel_error < 0 :
             throttle = 0
             decel = max(vel_error, self.decel_limit)

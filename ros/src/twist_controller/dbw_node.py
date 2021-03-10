@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 import rospy
 from std_msgs.msg import Bool
@@ -19,7 +20,8 @@ Carla is equipped with a drive-by-wire (dbw) system, meaning the throttle, brake
 Personal Notes : 
 ====================
 
-waypoint_follower/
+waypoint_follower
+
 A package containing code from Autoware which subscribes to /final_waypoints and publishes target vehicle linear and angular velocities in the form of twist commands to the /twist_cmd topic.
 
 - This python file implements the dbw_node publishers and subscribers. 
@@ -145,7 +147,7 @@ class DBWNode(object):
             rate.sleep()
             
     def dbw_enabled_cb(self, msg):
-        self dbw_enabled = msg
+        self.dbw_enabled = msg
         pass
     
     def twist_cb(self, msg):
