@@ -1,8 +1,14 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 '''
 Notes from Project Lesson : 
 
+This python file processes the incoming traffic light data and camera images. It uses the light classifier to get a color prediction, and publishes the location of any upcoming red lights.
+
 Note: The below section regarding adding in traffic light classification is an optional, stand out suggestion for the project. We of course encourage you to at least make an attempt at a working traffic light classifier, but it is not required for passing the project. You can just pull in the light information directly from the simulator to perform stop and go actions at intersections, if desired.
+
+You can instead just use the traffic light information returned from the simulator to still configure stopping at an intersection line and determining when to again proceed.
 
 You will build both a traffic light detection node and a traffic light classification node. Traffic light detection should take place within tl_detector.py, whereas traffic light classification should take place within ../tl_detector/light_classification_model/tl_classfier.py.
 
@@ -14,6 +20,41 @@ Because you will be writing code across several packages with some nodes dependi
 3. Traffic Light Detection: This can be split into 2 parts:
 - (Optional) Detection: Detect the traffic light and its color from the /image_color. The topic /vehicle/traffic_lights contains the exact location and status of all traffic lights in simulator, so you can test your output.
 - Waypoint publishing: Once you have correctly identified the traffic light and determined its position, you can convert it to a waypoint index and publish it.
+'''
+
+''' Additional Notes from the project lesson : 
+Traffic Light Detection Node Overview
+=====================================
+Once the vehicle is able to process waypoints, generate steering and throttle commands, and traverse the course, it will also need stop for obstacles. Traffic lights are the first obstacle that we'll focus on.
+
+The traffic light detection node (tl_detector.py) subscribes to four topics:
+
+/base_waypoints provides the complete list of waypoints for the course.
+/current_pose can be used to determine the vehicle's location.
+/image_color which provides an image stream from the car's camera. These images are used to determine the color of upcoming traffic lights.
+/vehicle/traffic_lights provides the (x, y, z) coordinates of all traffic lights.
+The node should publish the index of the waypoint for nearest upcoming red light's stop line to a single topic:
+
+/traffic_waypoint
+For example, if waypoints is the complete list of waypoints, and an upcoming red light's stop line is nearest to waypoints[12], then 12 should be published /traffic_waypoint. This index can later be used by the waypoint updater node to set the target velocity for waypoints[12] to 0 and smoothly decrease the vehicle velocity in the waypoints leading up to waypoints[12].
+
+The permanent (x, y) coordinates for each traffic light's stop line are provided by the config dictionary, which is imported from the traffic_light_config file:
+
+config_string = rospy.get_param("/traffic_light_config")
+self.config = yaml.load(config_string)
+Your task for this portion of the project can be broken into two steps:
+
+1. Use the vehicle's location and the (x, y) coordinates for traffic lights to find the nearest visible traffic light ahead of the vehicle. This takes place in the process_traffic_lights method of tl_detector.py. You will want to use the get_closest_waypoint method to find the closest waypoints to the vehicle and lights. Using these waypoint indices, you can determine which light is ahead of the vehicle along the list of waypoints.
+2. Use the camera image data to classify the color of the traffic light. The core functionality of this step takes place in the get_light_state method of tl_detector.py. There are a number of approaches you could take for this task. One of the simpler approaches is to train a deep learning classifier to classify the entire image as containing either a red light, yellow light, green light, or no light. One resource that's available to you is the traffic light's position in 3D space via the vehicle/traffic_lights topic.
+Note that the code to publish the results of process_traffic_lights is written for you already in the image_cb method.
+
+traffic_light_config
+This config file contains information about the camera (such as focal length) and the 2D position of the traffic lights's stop line in world coordinates.
+
+Helper Tool in the Simulator
+============================
+In order to help you acquire an accurate ground truth data source for the traffic light classifier, the Udacity simulator publishes the current color state of all traffic lights in the simulator to the /vehicle/traffic_lights topic in addition to the light location. This state can be used to generate classified images or subbed into your solution to help you work on another single component of the node. The state component of the topic won't be available when running your solution in real life so don't rely on it in the final submission. However, you can still reference this topic in real life to get the 3D world position of the traffic light.
+
 '''
 
 import rospy
