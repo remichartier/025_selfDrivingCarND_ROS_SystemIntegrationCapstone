@@ -16,6 +16,7 @@ Additional notes from project lesson :
 
  
 '''
+import rospy
 from yaw_controller import YawController
 from pid import PID
 from lowpass import LowPassFilter
@@ -116,8 +117,8 @@ class Controller(object):
         # Here we start doing some physics
         
         self.current_time = rospy.get_time()
-        sample_time = current_time - self.last_time
-        self.last_time = current_time
+        sample_time = self.current_time - self.last_time
+        self.last_time = self.current_time
         
         # For throttle, we're stepping through our throttle controller using the PID controller
         throttle = self.throttle_controller.step(vel_error, sample_time)
