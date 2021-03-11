@@ -140,7 +140,7 @@ class WaypointUpdater(object):
                 # Get closest waypoint
                 # closest_waypoint_idx = self.get_closest_waypoint_idx()
                 # Try with more generic function to be reused as well by tl_detector
-                closest_waypoint_idx = get_closest_waypoint_idx_generic(x=self.pose.pose.position.x,
+                closest_waypoint_idx = self.get_closest_waypoint_idx_generic(x=self.pose.pose.position.x,
                                                                 y=self.pose.pose.position.y,
                                                                 waypoint_tree=self.waypoint_tree,
                                                                 waypoints_2d=self.waypoints_2d)
