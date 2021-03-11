@@ -69,6 +69,15 @@ import tf
 import cv2
 import yaml
 
+""" re-use get_closest_waypoint_idx_generic() from node waypoint_updater
++ to use KDTree for this
+"""
+from scipy.spatial import KDTree
+import numpy as np
+import sys
+sys.path.append('../waypoint_updater')
+from get_closest_waypoint_idx import get_closest_waypoint_idx_generic
+
 STATE_COUNT_THRESHOLD = 3
 
 class TLDetector(object):
@@ -79,6 +88,10 @@ class TLDetector(object):
         self.waypoints = None
         self.camera_image = None
         self.lights = []
+        
+        # to use get_closest_waypoint_idx_generic() with KDTree
+        self.waypoints_2d = None
+        self.waypoints_tree = None
 
         sub1 = rospy.Subscriber('/current_pose', PoseStamped, self.pose_cb)
         sub2 = rospy.Subscriber('/base_waypoints', Lane, self.waypoints_cb)
@@ -114,7 +127,21 @@ class TLDetector(object):
 
     def waypoints_cb(self, waypoints):
         self.waypoints = waypoints
+        
+        """ re-use get_closest_waypoint_idx_generic() from node waypoint_updater
+        + to use KDTree for this
+        """
+        # Use KDTree data structure to search the closest point in space really efficiently
+        if not self.waypoints_2d: 
+            ''' Because we want to make sure that self.waypoints_2d is initialized before 
+            the subscriber is otherwise could run into risky conditions where the subscriber callback is called 
+            before self.waypoints_2d is initialized, otherwise it would not know what to reference
+            '''
+            self.waypoints_2d = [[waypoint.pose.pose.position.x, waypoint.pose.pose.position.y] for waypoint in waypoints.waypoints]
+            self.waypoint_tree = KDTree(self.waypoints_2d)
 
+        
+        
     def traffic_cb(self, msg):
         self.lights = msg.lights
 
@@ -203,11 +230,19 @@ styx_msgs/Waypoint[] waypoints
         
         """
         #TODO implement
-        
+        # Get closest waypoint
+        # closest_waypoint_idx = self.get_closest_waypoint_idx()
+        # Try with more generic function to be reused from waypoint_updater node
+        closest_waypoint_idx = get_closest_waypoint_idx_generic(x=pose.pose.position.x,
+                                                                y=pose.pose.position.y,
+                                                                waypoint_tree=self.waypoint_tree,
+                                                                waypoints_2d=self.waypoints_2d)
         
         
         # index of the closest waypoint in self.waypoints
-        return 0
+        return closest_waypoint_idx
+    
+    
 
     def get_light_state(self, light):
         """Determines the current color of the traffic light
