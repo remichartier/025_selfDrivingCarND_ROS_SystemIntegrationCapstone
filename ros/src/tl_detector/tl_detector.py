@@ -158,7 +158,55 @@ class TLDetector(object):
             int: index of the closest waypoint in self.waypoints
 
         """
+        """ Personal notes : 
+        - pose comes from ('/current_pose', PoseStamped, self.pose_cb)
+        
+        geometry_msgs/PoseStamped pose
+    std_msgs/Header header
+      uint32 seq
+      time stamp
+      string frame_id
+    geometry_msgs/Pose pose
+      geometry_msgs/Point position
+        float64 x
+        float64 y
+        float64 z
+      geometry_msgs/Quaternion orientation
+        float64 x
+        float64 y
+        float64 z
+        float64 w
+        
+        Waypoints in self.waypoints (('/base_waypoints', Lane, self.waypoints_cb))
+        
+        styx_msgs/Lane
+provides the following message information:
+std_msgs/Header header
+  uint32 seq
+  time stamp
+  string frame_id
+styx_msgs/Waypoint[] waypoints
+  geometry_msgs/PoseStamped pose
+    std_msgs/Header header
+      uint32 seq
+      time stamp
+      string frame_id
+    geometry_msgs/Pose pose
+      geometry_msgs/Point position
+        float64 x
+        float64 y
+        float64 z
+        
+        Looking for closest waypoint ahead to a pose (x,y) already implemented in some ways 
+        via some methods in waypoint_updater node.
+        
+        
+        """
         #TODO implement
+        
+        
+        
+        # index of the closest waypoint in self.waypoints
         return 0
 
     def get_light_state(self, light):
@@ -180,6 +228,15 @@ class TLDetector(object):
         #Get classification
         return self.light_classifier.get_classification(cv_image)
 
+    """ Notes from Project lesson : 
+    Your task for this portion of the project can be broken into two steps:
+
+    1. Use the vehicle's location and the (x, y) coordinates for traffic lights to find the nearest visible traffic light ahead of
+    the vehicle. This takes place in the process_traffic_lights method of tl_detector.py. You will want to use the
+    get_closest_waypoint() method to find the closest waypoints to the vehicle and lights. Using these waypoint indices, you can
+    determine which light is ahead of the vehicle along the list of waypoints.
+    """
+    
     def process_traffic_lights(self):
         """Finds closest visible traffic light, if one exists, and determines its
             location and color
@@ -193,6 +250,10 @@ class TLDetector(object):
 
         # List of positions that correspond to the line to stop in front of for a given intersection
         stop_line_positions = self.config['stop_line_positions']
+        """ The permanent (x, y) coordinates for each traffic light's stop line are provided by the config dictionary
+        ie in self.config
+        """
+        
         if(self.pose):
             car_position = self.get_closest_waypoint(self.pose.pose)
 
