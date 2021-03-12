@@ -290,13 +290,42 @@ styx_msgs/Waypoint[] waypoints
         """
         
         if(self.pose):
-            car_position = self.get_closest_waypoint(self.pose.pose)
+            car_position_idx = self.get_closest_waypoint(self.pose.pose) # closest waypoint to the vehicle.
+            # but this one gives index closest waypoint in front of the position given, not necessarily the closest !
 
         #TODO find the closest visible traffic light (if one exists)
-
+            light_waypoint_idx_dict = {}
+            for i in range(len(stop_line_positions)):
+                pos = stop_line_positions[i]
+                light_waypoint_idx_dict[i] = get_closest_waypoint_idx_generic(x=pos[0],
+                                                                y=pos[1],
+                                                                waypoint_tree=self.waypoint_tree,
+                                                                waypoints_2d=self.waypoints_2d)
+            # sort those indexes
+            if len(light_waypoint_idx_dict) != 0:
+                """ The sorted(dict1, key=dict1.get) expression will return
+                the list of keys whose values are sorted in order.
+                """
+                sorted_key_list = sorted(light_waypoint_idx_dict, key=light_waypoint_idx_dict.get)
+                i = 0
+                while car_position_idx > light_waypoint_idx_dict[sorted_key_list[i]] and i < len(sorted_key_list) :
+                    i += 1
+                # exit conditions : found car_position_idx < light_waypoint_idx_dict[sorted_key_list[i]]
+                # OR : i = len(sorted_key_list)
+                if i == len(sorted_key_list) :
+                    # then next light is the first in the sorted list
+                    light = sorted_key_list[0]
+                else: # found a light in the list
+                    light = sorted_key_list[i]
+                light_stopline_wp = light_waypoint_idx_dict[light]
+                    
+                # Remi : for me, light is the index of the light in stop_line_positions
+                
         if light:
-            state = self.get_light_state(light)
-            return light_wp, state
+            # until can get light state, comment line below and return only UNKNOWN
+            # state = self.get_light_state(light)
+            state = TrafficLight.UNKNOWN
+            return light_stopline_wp, state
         self.waypoints = None
         return -1, TrafficLight.UNKNOWN
 
