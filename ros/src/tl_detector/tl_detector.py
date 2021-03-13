@@ -103,6 +103,13 @@ class TLDetector(object):
         simulator. When testing on the vehicle, the color state will not be available. You'll need to
         rely on the position of the light and the camera image to predict it.
         '''
+        ''' PERSONAL NOTE
+        WHEN WORKING WITH SIMULATOR, /vehicle/traffic_lights contains traffic light color state info given from simulator,
+        If using the car --> won't have this color light state info, so will need to rely on the classifier.
+        But for testing purposes, before start working on classifier, we can just depend on information
+        given by the simulator.
+        can use this in case traffic light classifier is not yet developped.
+        '''
         sub3 = rospy.Subscriber('/vehicle/traffic_lights', TrafficLightArray, self.traffic_cb)
         sub6 = rospy.Subscriber('/image_color', Image, self.image_cb)
 
@@ -111,6 +118,7 @@ class TLDetector(object):
 
         self.upcoming_red_light_pub = rospy.Publisher('/traffic_waypoint', Int32, queue_size=1)
 
+        # Code to setup the classifier
         self.bridge = CvBridge()
         self.light_classifier = TLClassifier()
         self.listener = tf.TransformListener()
@@ -143,7 +151,7 @@ class TLDetector(object):
         
         
     def traffic_cb(self, msg):
-        self.lights = msg.lights
+        self.lights = msg.lights # light info (location in 3D + on Simulator Light Color State)
 
     def image_cb(self, msg):
         """Identifies red lights in the incoming camera image and publishes the index
@@ -163,6 +171,17 @@ class TLDetector(object):
         of times till we start using it. Otherwise the previous stable state is
         used.
         '''
+        ''' Personal notes from project lesson : 
+            self.state store earlier state.
+            If images comes in, we process that image via the process_traffic_lights()
+            and we determined that the state has changed, may be state of light changed from
+            Green to Yellow, or yellow to red, then we start into this counting system, we
+            try to make sure that this light is staying consistent before we're taking any 
+            actions. Because classifier may be a little bit noisy and may make lights changing 
+            and changing again. Like green to yellow to red. So we want to make sure that lights 
+            so we want to be certain that lights are going to stay at a certain state before
+            we take any actions.
+        '''
         if self.state != state:
             self.state_count = 0
             self.state = state
@@ -171,6 +190,13 @@ class TLDetector(object):
             light_wp = light_wp if state == TrafficLight.RED else -1
             self.last_wp = light_wp
             self.upcoming_red_light_pub.publish(Int32(light_wp))
+            ''' When we publish traffic light, we're really interested in Red traffic lights,
+            everything else, we can continue driving through. So set light_wp if RED otherwise 
+            keep it at -1. To make sure waypoint_updater does not try to update waypoint velocities
+            on something other that a Red light. Really we only need to stop the car if the light is red.
+            Not necessarily, we may be interested in modifying this logic to also update the code if
+            the light is yellow.
+            '''
         else:
             self.upcoming_red_light_pub.publish(Int32(self.last_wp))
         self.state_count += 1
@@ -254,6 +280,16 @@ styx_msgs/Waypoint[] waypoints
             int: ID of traffic light color (specified in styx_msgs/TrafficLight)
 
         """
+        
+        # For testing, just return the light state
+        """ For testing purposes, the traffic lights come in from the simulator, 
+        with the state already, so can just use light.state for testing. 
+        """
+        
+        return light.state
+        
+        """ if not for testing and if using classifier, car re-use this initial code : 
+        
         if(not self.has_image):
             self.prev_light_loc = None
             return False
@@ -262,6 +298,8 @@ styx_msgs/Waypoint[] waypoints
 
         #Get classification
         return self.light_classifier.get_classification(cv_image)
+        """
+        
 
     """ Notes from Project lesson : 
     Your task for this portion of the project can be broken into two steps:
@@ -281,7 +319,7 @@ styx_msgs/Waypoint[] waypoints
             int: ID of traffic light color (specified in styx_msgs/TrafficLight)
 
         """
-        light = None
+        closest_light = None
 
         # List of positions that correspond to the line to stop in front of for a given intersection
         stop_line_positions = self.config['stop_line_positions']
@@ -312,21 +350,17 @@ styx_msgs/Waypoint[] waypoints
                     i += 1
                 # exit conditions : found car_position_idx < light_waypoint_idx_dict[sorted_key_list[i]]
                 # OR : i = len(sorted_key_list)
-                if i == len(sorted_key_list) :
-                    # then next light is the first in the sorted list
-                    light = sorted_key_list[0]
-                else: # found a light in the list
-                    light = sorted_key_list[i]
-                light_stopline_wp = light_waypoint_idx_dict[light]
+                if i < len(sorted_key_list) :      # ie if found a light in the list, ahead of vehicle
+                    light_idx = sorted_key_list[i]
+                    light_stopline_wp = light_waypoint_idx_dict[light_idx]
+                    closest_light = self.light[light_idx]
                     
-                # Remi : for me, light is the index of the light in stop_line_positions
+                # Remi : for me, light_idx is the index of the light in stop_line_positions
                 
-        if light:
-            # until can get light state, comment line below and return only UNKNOWN
-            # state = self.get_light_state(light)
-            state = TrafficLight.UNKNOWN
+        if closest_light:
+            state = self.get_light_state(light)
             return light_stopline_wp, state
-        self.waypoints = None
+        # self.waypoints = None # comment because not used.
         return -1, TrafficLight.UNKNOWN
 
 if __name__ == '__main__':
