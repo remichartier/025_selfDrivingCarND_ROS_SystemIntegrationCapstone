@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 '''
 Notes from project lesson : 
@@ -79,6 +80,7 @@ Note that the coordinates for linear velocity are vehicle-centered, so only the 
 import rospy
 from geometry_msgs.msg import PoseStamped
 from styx_msgs.msg import Lane, Waypoint
+from std_msgs.msg import Int32
 
 import math
 
