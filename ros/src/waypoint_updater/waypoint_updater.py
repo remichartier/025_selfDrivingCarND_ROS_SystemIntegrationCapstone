@@ -104,8 +104,9 @@ as well as to verify your TL classifier.
 TODO (for Yousuf and Aaron): Stopline location for each traffic light.
 '''
 
-LOOKAHEAD_WPS = 200 # Number of waypoints we will publish. You can change this number
-
+#LOOKAHEAD_WPS = 200 # Number of waypoints we will publish. You can change this number
+LOOKAHEAD_WPS = 50 # cf https://knowledge.udacity.com/questions/499973, otherwise car goes out of the road...
+# had also to correct Autoware pure_pursuit_core.cpp + .h, relative_angle_threshold_(0.1)
 
 class WaypointUpdater(object):
     def __init__(self):
