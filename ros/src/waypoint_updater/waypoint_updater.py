@@ -13,10 +13,6 @@ Because you will be writing code across several packages with some nodes dependi
 
 1. Waypoint Updater Node (Partial): Complete a partial waypoint updater which subscribes to /base_waypoints and /current_pose and publishes to /final_waypoints.
 
-4. Waypoint Updater (Full): Use /traffic_waypoint to change the waypoint target velocities before publishing to /final_waypoints. Your car should now stop at red traffic lights and move when they are green.
-
-
-
 The /base_waypoints topic publishes a list of all waypoints for the track, so this list includes waypoints both before and after the vehicle (note that the publisher for /base_waypoints publishes only once). For this step in the project, the list published to /final_waypoints should include just a fixed number of waypoints currently ahead of the vehicle:
 
 The first waypoint in the list published to /final_waypoints should be the first waypoint that is currently ahead of the car.
@@ -76,6 +72,20 @@ Note that the coordinates for linear velocity are vehicle-centered, so only the 
 
 4. Waypoint Updater (Full): Use /traffic_waypoint to change the waypoint target velocities before publishing to /final_waypoints. Your car should now stop at red traffic lights and move when they are green.
 
+There are several helpful methods that you can use:
+
+- get_waypoint_velocity(self, waypoint): gets the linear velocity (x-direction) for a single waypoint.
+- set_waypoint_velocity(self, waypoints, waypoint, velocity): sets the linear velocity (x-direction) for a single waypoint in a list of waypoints. Here, waypoints is a list of waypoints, waypoint is a waypoint index in the list, and velocity is the desired velocity.
+- distance(self, waypoints, wp1, wp2): Computes the distance between two waypoints in a list along the piecewise linear arc connecting all waypoints between the two. Here, waypoints is a list of waypoints, and wp1 and wp2 are the indices of two waypoints in the list. This method may be helpful in determining the velocities for a sequence of waypoints leading up to a red light (the velocities should gradually decrease to zero starting some distance from the light).
+
+To accomplish this part of the project successfully, you will need to adjust the target velocities for the waypoints leading up to red traffic lights or other obstacles in order to bring the vehicle to a smooth and full stop. You should aim to have a smooth decrease in velocity leading up to the stopping point.
+
+It will be up to you determine what the deceleration should be for the vehicle, and how this deceleration corresponds to waypoint target velocities. As in the Path Planning project, acceleration should not exceed 10 m/s^2 and jerk should not exceed 10 m/s^3.
+
+Important:
+Be sure to limit the top speed of the vehicle to the km/h velocity set by the velocity rosparam in waypoint_loader. Reviewers will test on the simulator with an adjusted top speed.
+
+
 '''
 import rospy
 from geometry_msgs.msg import PoseStamped
@@ -116,6 +126,11 @@ class WaypointUpdater(object):
         rospy.Subscriber('/base_waypoints', Lane, self.waypoints_cb)
 
         # TODO: Add a subscriber for /traffic_waypoint and /obstacle_waypoint below
+        ''' Note from project lesson : 
+        Once traffic light detection is working properly or you are pulling in the light information from the simulator, 
+        you can incorporate the traffic light data into your waypoint updater node. To do this, you will need to add a subscriber 
+        for the /traffic_waypoint topic and implement the traffic_cb callback for this subscriber.
+        '''
         rospy.Subscriber('/traffic_waypoint', Int32, self.traffic_cb)
 
         self.final_waypoints_pub = rospy.Publisher('final_waypoints', Lane, queue_size=1)
@@ -190,19 +205,83 @@ class WaypointUpdater(object):
     
     
     def publish_waypoints(self, closest_idx):
+        final_lane = self.generate_lane()
+        self.final_waypoints_pub.publish(final_lane)
+        
+    '''
+    Notes from project lesson : method generate_lane()
+    We're gonna take the waypoints, and update their velocity based on what we want the car to behave.
+    So if we have some traffic lights information coming in, we want to slow the car down leading up
+    to the stop line in front of the traffic line.
+    All we have to do is to update the twist.linear.x
+    There are some extra logic in Autoware that helps us to get the car to that speed.
+    '''
+    def generate_lane():
         '''Message type needs to be a lane so we create a new lane object, or new
         lane message, lane header same as base_waypoints header, it does not really matter,
         we're not going to use the header ... and then fill the waypoints for that lane, starting
         by the closes_idx to the next LOOKAHEAD_WPS waypoints '''
         lane = Lane()
-        lane.header = self.base_waypoints.header
+        closest_idx = self.get_closest_waypoint_idx()
+        farther_idx = closest_idx + LOOKAHEAD_WPS
         '''Do we have to worry about doing a modular in case it goes over the length of waypoints ?
         we don't because Python slicing is really nice, so if closest index + LOOKAHEAD waypoints
         is bigger than the total length of waypoints, it will just give us the slice from the closest
         to the end of the waypoints'''
-        lane.waypoints = self.base_waypoints.waypoints[closest_idx:closest_idx + LOOKAHEAD_WPS]
-        self.final_waypoints_pub.publish(lane)
+        base_waypoints = self.base_waypoints.waypoints[closest_idx:farther_idx]
         
+        if self.stopline_wp_idx == -1 or (self.stopline_wp_idx >= farther_idx) :
+            lane.waypoints = base_waypoints
+        else:
+            lane.waypoints = self.decelerate_waypoints(base_waypoints, closest_idx)
+            
+        return lane
+    ''' We want to be little careful here, the decelerate_waypoints() will create new waypoints message types here
+    Becauce we do not want to modify our original waypoints. Because that message waypoints comes only once, and
+    we want to keep the base_waypoints preserved. Otherwise if we start changing modify the base_waypoints, there
+    would be problems when we drive back over the same waypoints.
+    So we want to create new list of waypoints but use some information from our base_waypoints.
+    
+    '''
+    def decelerate_waypoints(self, waypoints, closest_idx):
+        temp = []
+        for i, wp in enumerate(waypoints)
+            
+            # Create new waypoint message here. 
+            p = Waypoint()
+            ''' set pose to base_waypoints pose because position of the waypoint is not going to change anyway and 
+            that pose also contains the orientation and it should keep the same as well.
+            '''
+            p.pose = wp.pose
+        
+            stop_idx = max(self.stopline_wp_idx - closest_idx -2, 0) # 2 waypoints back from line so front of car stops at line.
+            ''' calculate the distance between waypoint index i and waypoint at stop_idx
+            distance() will return 0 if i is greater than stop_idx
+            '''
+            dist = self.distance(waypoints, i, stop_idx)
+            '''
+            Using SquareRoot function because it is very similar to what is the waypoint_loader code
+            vel function of dist, as we get closer (dist decrease) --> vel decreases until 0, and the sqrt()
+            will help that. You may want to not use sqrt() because the deceleration will become steep as you
+            get close to the stop line.
+            So instead of a square root, you could just multiply by a constant. So you get some linear deceleration.
+            '''
+            vel = math.sqrt(2 * MAX_DECEL * dist)
+            # if velocity is small enough, we just set it to 0.
+            if vel < 1. :
+                vel = 0
+            '''sqrt() can become very large as the distance is large, so we do not want to set a very large velocity 
+            if we're a long way away from the stop waypoint, we'd rather keep the velocity that was given for the waypoints
+            before. So we treat that like the speed limit.
+            All the velocity on the waypoints are the speed limit and there's no reason we ever want to be higher than that.
+            So we keep the speed limit, and that as the square root becomes smaller than the speed limit, we switch to the 
+            square root velocity.
+            '''
+            p.twist.twist.linear.x = min(vel, wp.twist.twist.linear.x)
+            temp.append(p)
+        
+        return temp
+    
     def pose_cb(self, msg):
         # TODO: Implement
         # Just store the car's position
@@ -230,7 +309,7 @@ class WaypointUpdater(object):
 
     def traffic_cb(self, msg):
         # TODO: Callback for /traffic_waypoint message. Implement
-        
+        self.stopline_wp_idx = msg.data
         pass
 
     def obstacle_cb(self, msg):
