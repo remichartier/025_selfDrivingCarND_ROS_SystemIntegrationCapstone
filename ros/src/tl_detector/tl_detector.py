@@ -328,8 +328,12 @@ styx_msgs/Waypoint[] waypoints
         """
         
         if(self.pose):
-            car_position_idx = self.get_closest_waypoint(self.pose.pose) # closest waypoint to the vehicle.
+            #car_position_idx = self.get_closest_waypoint(self.pose.pose) # closest waypoint to the vehicle.
             # but this one gives index closest waypoint in front of the position given, not necessarily the closest !
+            car_position_idx = get_closest_waypoint_idx_generic(self.pose.pose.position.x,
+                                                                self.pose.pose.position.y,
+                                                                waypoint_tree=self.waypoint_tree,
+                                                                waypoints_2d=self.waypoints_2d)
 
         #TODO find the closest visible traffic light (if one exists)
             light_waypoint_idx_dict = {}
@@ -353,12 +357,12 @@ styx_msgs/Waypoint[] waypoints
                 if i < len(sorted_key_list) :      # ie if found a light in the list, ahead of vehicle
                     light_idx = sorted_key_list[i]
                     light_stopline_wp = light_waypoint_idx_dict[light_idx]
-                    closest_light = self.light[light_idx]
+                    closest_light = self.lights[light_idx]
                     
                 # Remi : for me, light_idx is the index of the light in stop_line_positions
                 
         if closest_light:
-            state = self.get_light_state(light)
+            state = self.get_light_state(closest_light)
             return light_stopline_wp, state
         # self.waypoints = None # comment because not used.
         return -1, TrafficLight.UNKNOWN
