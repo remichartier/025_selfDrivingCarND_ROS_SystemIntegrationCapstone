@@ -350,11 +350,11 @@ styx_msgs/Waypoint[] waypoints
                 """
                 sorted_key_list = sorted(light_waypoint_idx_dict, key=light_waypoint_idx_dict.get)
                 i = 0
-                while car_position_idx > light_waypoint_idx_dict[sorted_key_list[i]] and i < len(sorted_key_list) :
+                while car_position_idx > light_waypoint_idx_dict[sorted_key_list[i]] and i < len(sorted_key_list) -1:
                     i += 1
                 # exit conditions : found car_position_idx < light_waypoint_idx_dict[sorted_key_list[i]]
-                # OR : i = len(sorted_key_list)
-                if i < len(sorted_key_list) :      # ie if found a light in the list, ahead of vehicle
+                # OR : i = len(sorted_key_list) -1
+                if i < len(sorted_key_list) -1:      # ie if found a light in the list, ahead of vehicle
                     light_idx = sorted_key_list[i]
                     light_stopline_wp = light_waypoint_idx_dict[light_idx]
                     closest_light = self.lights[light_idx]

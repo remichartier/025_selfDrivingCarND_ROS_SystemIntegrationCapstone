@@ -256,7 +256,7 @@ class WaypointUpdater(object):
             '''
             p.pose = wp.pose
         
-            stop_idx = max(self.stopline_wp_idx - closest_idx -5, 0) # 2 waypoints back from line so front of car stops at line.
+            stop_idx = max(self.stopline_wp_idx - closest_idx -7, 0) # 2 waypoints back from line so front of car stops at line.
             ''' calculate the distance between waypoint index i and waypoint at stop_idx
             distance() will return 0 if i is greater than stop_idx
             '''
