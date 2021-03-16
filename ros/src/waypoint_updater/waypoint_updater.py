@@ -117,6 +117,7 @@ TODO (for Yousuf and Aaron): Stopline location for each traffic light.
 #LOOKAHEAD_WPS = 200 # Number of waypoints we will publish. You can change this number
 LOOKAHEAD_WPS = 50 # cf https://knowledge.udacity.com/questions/499973, otherwise car goes out of the road...
 # had also to correct Autoware pure_pursuit_core.cpp + .h, relative_angle_threshold_(0.1)
+MAX_DECEL = 10
 
 class WaypointUpdater(object):
     def __init__(self):
@@ -140,6 +141,7 @@ class WaypointUpdater(object):
         self.base_waypoints = None
         self.waypoints_2d = None
         self.waypoints_tree = None
+        self.stopline_wp_idx = -1
         
         # rospy.spin()
         self.loop() 
@@ -216,7 +218,7 @@ class WaypointUpdater(object):
     All we have to do is to update the twist.linear.x
     There are some extra logic in Autoware that helps us to get the car to that speed.
     '''
-    def generate_lane():
+    def generate_lane(self):
         '''Message type needs to be a lane so we create a new lane object, or new
         lane message, lane header same as base_waypoints header, it does not really matter,
         we're not going to use the header ... and then fill the waypoints for that lane, starting
@@ -245,7 +247,7 @@ class WaypointUpdater(object):
     '''
     def decelerate_waypoints(self, waypoints, closest_idx):
         temp = []
-        for i, wp in enumerate(waypoints)
+        for i, wp in enumerate(waypoints):
             
             # Create new waypoint message here. 
             p = Waypoint()
@@ -254,7 +256,7 @@ class WaypointUpdater(object):
             '''
             p.pose = wp.pose
         
-            stop_idx = max(self.stopline_wp_idx - closest_idx -2, 0) # 2 waypoints back from line so front of car stops at line.
+            stop_idx = max(self.stopline_wp_idx - closest_idx -5, 0) # 2 waypoints back from line so front of car stops at line.
             ''' calculate the distance between waypoint index i and waypoint at stop_idx
             distance() will return 0 if i is greater than stop_idx
             '''

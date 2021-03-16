@@ -137,7 +137,7 @@ class Controller(object):
         
         if linear_vel == 0 and current_vel < 0.1 :
             throttle = 0
-            brake = 400 #400 # N * m; to hold the car in place, If we are stopped at a light
+            brake = 700 #400 # N * m; to hold the car in place, If we are stopped at a light
             # Acceleration - 1m/s2
             '''
             Or else throttle also really small and velocity error < 0
