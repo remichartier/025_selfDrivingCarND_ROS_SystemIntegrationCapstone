@@ -1,3 +1,8 @@
+'''
+Notes from project lesson : 
+
+A generic PID controller that can be used in twist_controller.py.
+'''
 
 MIN_NUM = float('-inf')
 MAX_NUM = float('inf')
@@ -22,6 +27,7 @@ class PID(object):
         derivative = (error - self.last_error) / sample_time;
 
         val = self.kp * error + self.ki * integral + self.kd * derivative;
+
 
         if val > self.max:
             val = self.max

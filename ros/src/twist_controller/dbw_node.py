@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 import rospy
 from std_msgs.msg import Bool
@@ -7,6 +8,49 @@ from geometry_msgs.msg import TwistStamped
 import math
 
 from twist_controller import Controller
+
+'''
+Notes from project lesson : 
+
+Carla is equipped with a drive-by-wire (dbw) system, meaning the throttle, brake, and steering have electronic control. This package contains the files that are responsible for control of the vehicle: the node dbw_node.py and the file twist_controller.py, along with a pid and lowpass filter that you can use in your implementation. The dbw_node subscribes to the /current_velocity topic along with the /twist_cmd topic to receive target linear and angular velocities. Additionally, this node will subscribe to /vehicle/dbw_enabled, which indicates if the car is under dbw or driver control. This node will publish throttle, brake, and steering commands to the /vehicle/throttle_cmd, /vehicle/brake_cmd, and /vehicle/steering_cmd topics.
+
+'''
+
+''' 
+Personal Notes : 
+====================
+
+waypoint_follower
+
+A package containing code from Autoware which subscribes to /final_waypoints and publishes target vehicle linear and angular velocities in the form of twist commands to the /twist_cmd topic.
+
+- This python file implements the dbw_node publishers and subscribers. 
+- You will need to write ROS subscribers for the /current_velocity, /twist_cmd, and /vehicle/dbw_enabled topics.
+- This file also imports the Controller class from twist_controller.py which will be used for implementing the necessary controllers.
+- The function used to publish throttle, brake, and steering is publish.
+- Note that throttle values passed to publish should be in the range 0 to 1, although a throttle of 1 means the vehicle throttle will be fully engaged. Brake values passed to publish should be in units of torque (N*m). 
+- The correct values for brake can be computed using the desired acceleration, weight of the vehicle, and wheel radius.
+
+- Implement the drive-by-wire node (dbw_node.py) which will subscribe to /twist_cmd and use various controllers to provide appropriate throttle, brake, and steering commands. These commands can then be published to the following topics:
+
+/vehicle/throttle_cmd
+/vehicle/brake_cmd
+/vehicle/steering_cmd
+
+/vehicle/dbw_enabled
+=====================
+Since a safety driver may take control of the car during testing, you should not assume that the car is always following your commands. If a safety driver does take over, your PID controller will mistakenly accumulate error, so you will need to be mindful of DBW status. The DBW status can be found by subscribing to /vehicle/dbw_enabled.
+
+When operating the simulator please check DBW status and ensure that it is in the desired state. DBW can be toggled by clicking "Manual" in the simulator GUI.
+
+Important:
+==========
+- dbw_node.py is currently set up to publish steering, throttle, and brake commands at 50hz. The DBW system on Carla expects messages at this frequency, and will disengage (reverting control back to the driver) if control messages are published at less than 10hz. This is a safety feature on the car intended to return control to the driver if the software system crashes. You are welcome to modify how the dbw_node.py code is structured, but please ensure that control commands are published at 50hz.
+
+- Additionally, although the simulator displays speed in mph, all units in the project code use the metric system, including the units of messages in the /current_velocity topic (which have linear velocity in m/s).
+
+- Finally, Carla has an automatic transmission, which means the car will roll forward if no brake and no throttle is applied. To prevent Carla from moving requires about 700 Nm of torque.
+'''
 
 '''
 You can build this node only after you have built (or partially built) the `waypoint_updater` node.
@@ -55,24 +99,65 @@ class DBWNode(object):
 
         # TODO: Create `Controller` object
         # self.controller = Controller(<Arguments you wish to provide>)
-
+        # Controller class coming from twist_constroller.py
+        self.controller = Controller(vehicle_mass=vehicle_mass, 
+                                     fuel_capacity=fuel_capacity,
+                                     brake_deadband=brake_deadband,
+                                     decel_limit=decel_limit,
+                                     accel_limit=accel_limit,
+                                     wheel_radius=wheel_radius,
+                                     wheel_base=wheel_base, 
+                                     steer_ratio=steer_ratio, 
+                                     max_lat_accel=max_lat_accel,
+                                     max_steer_angle=max_steer_angle)
+        
         # TODO: Subscribe to all the topics you need to
+        rospy.Subscriber('/vehicle/dbw_enabled', Bool, self.dbw_enabled_cb)
+        rospy.Subscriber('/twist_cmd', TwistStamped, self.twist_cb)
+        rospy.Subscriber('/current_velocity', TwistStamped, self.velocity_cb)
+        
+        self.current_vel = None
+        self.current_ang_vel = None
+        self.dbw_enabled = None
+        self.linear_vel = None
+        self.angular_vel = None
+        self.throttle = 0
+        self.steering = 0
+        self.brake = 0
 
         self.loop()
 
     def loop(self):
         rate = rospy.Rate(50) # 50Hz
         while not rospy.is_shutdown():
-            # TODO: Get predicted throttle, brake, and steering using `twist_controller`
-            # You should only publish the control commands if dbw is enabled
-            # throttle, brake, steering = self.controller.control(<proposed linear velocity>,
-            #                                                     <proposed angular velocity>,
-            #                                                     <current linear velocity>,
-            #                                                     <dbw status>,
-            #                                                     <any other argument you need>)
-            # if <dbw is enabled>:
-            #   self.publish(throttle, brake, steer)
+            if not None in (self.current_vel, self.linear_vel, self.angular_vel):
+                # TODO: Get predicted throttle, brake, and steering using `twist_controller`
+                # You should only publish the control commands if dbw is enabled
+                ''' controller coming from twist_controller.py
+                self.current_vel, dbw_enabled, linear_vel and angular_vel are getting filled by some 
+                callback functions
+                '''
+                self.throttle, self.brake, self.steering = self.controller.control(self.current_vel,
+                                                                                   self.dbw_enabled,
+                                                                                   self.linear_vel,
+                                                                                   self.angular_vel)
+            if self.dbw_enabled:
+               self.publish(self.throttle, self.brake, self.steering)
+            
             rate.sleep()
+            
+    def dbw_enabled_cb(self, msg):
+        self.dbw_enabled = msg
+        pass
+    
+    def twist_cb(self, msg):
+        self.linear_vel = msg.twist.linear.x
+        self.angular_vel = msg.twist.angular.z
+        pass
+    
+    def velocity_cb(self, msg):
+        self.current_vel = msg.twist.linear.x
+        pass
 
     def publish(self, throttle, brake, steer):
         tcmd = ThrottleCmd()

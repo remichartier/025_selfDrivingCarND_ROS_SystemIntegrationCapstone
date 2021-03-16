@@ -88,6 +88,7 @@ private:
   geometry_msgs::TwistStamped outputZero() const;
   geometry_msgs::TwistStamped outputTwist(geometry_msgs::Twist t) const;
 
+// change relative_angle_threshold_(5.) to try to improve continuous left/right drift 
 public:
   PurePursuit(bool linear_interpolate_mode)
     : RADIUS_MAX_(9e10)
@@ -99,7 +100,7 @@ public:
     , lookahead_distance_calc_ratio_(2.0)
     , minimum_lookahead_distance_(6.0)
     , displacement_threshold_(0.2)
-    , relative_angle_threshold_(5.)
+    , relative_angle_threshold_(0.1)
     , waypoint_set_(false)
     , pose_set_(false)
     , velocity_set_(false)

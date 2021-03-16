@@ -238,7 +238,17 @@ bool PurePursuit::verifyFollowing() const
   double displacement = getDistanceBetweenLineAndPoint(current_pose_.pose.position, a, b, c);
   double relative_angle = getRelativeAngle(current_waypoints_.getWaypointPose(1), current_pose_.pose);
   //ROS_ERROR("side diff : %lf , angle diff : %lf",displacement,relative_angle);
-  if (displacement < displacement_threshold_ && relative_angle < relative_angle_threshold_)
+  /*
+   * Notes from project lesson : 
+   * Autoware code does not recompute your trajectory until you passed a certain distance away from the waypoints
+   * or certain angle away from the trajectory of waypoints.
+   * And with the simple controller we use, by the time it recomputed the trajectory, and gave new twist commands
+   * to the car, the car had already started to wander away from the waypoints. And the car then steers suddenly
+   * back to the waypoints. And then by the time the waypoints follow in nodes with new twist commands, we've
+   * already wandered in the other side.
+   */
+  // if (displacement < displacement_threshold_ && relative_angle < relative_angle_threshold_)
+  if (relative_angle < relative_angle_threshold_)
   {
     // ROS_INFO("Following : True");
     return true;
