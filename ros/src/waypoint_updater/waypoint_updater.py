@@ -225,7 +225,15 @@ class WaypointUpdater(object):
         we're not going to use the header ... and then fill the waypoints for that lane, starting
         by the closes_idx to the next LOOKAHEAD_WPS waypoints '''
         lane = Lane()
-        closest_idx = self.get_closest_waypoint_idx()
+        
+        #closest_idx = self.get_closest_waypoint_idx()
+        
+        closest_idx = get_closest_waypoint_idx_generic(x=self.pose.pose.position.x,
+                                                       y=self.pose.pose.position.y,
+                                                       waypoint_tree=self.waypoint_tree,
+                                                       waypoints_2d=self.waypoints_2d,
+                                                       need_next = True)
+        
         farther_idx = closest_idx + LOOKAHEAD_WPS
         '''Do we have to worry about doing a modular in case it goes over the length of waypoints ?
         we don't because Python slicing is really nice, so if closest index + LOOKAHEAD waypoints
@@ -257,7 +265,7 @@ class WaypointUpdater(object):
             '''
             p.pose = wp.pose
         
-            stop_idx = max(self.stopline_wp_idx - closest_idx -3, 0) # 2 waypoints back from line so front of car stops at line.
+            stop_idx = max(self.stopline_wp_idx - closest_idx -6, 0) # 2 waypoints back from line so front of car stops at line.
             ''' calculate the distance between waypoint index i and waypoint at stop_idx
             distance() will return 0 if i is greater than stop_idx
             '''
