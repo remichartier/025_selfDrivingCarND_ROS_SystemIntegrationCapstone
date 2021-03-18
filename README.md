@@ -25,6 +25,14 @@ The project requires the use of Ubuntu Linux (the operating system of Carla) and
 
 - The system integration project uses its own simulator which will interface with your ROS code and has traffic light detection. You can download the simulator [here](https://github.com/udacity/CarND-Capstone/releases). To improve performance while using a VM, we recommend downloading the simulator for your host operating system and using this outside of the VM. You will be able to run project code within the VM while running the simulator natively in the host using port forwarding on port 4567. For more information on how to set up port forwarding, see the end of the classroom concept [here](https://s3-us-west-1.amazonaws.com/udacity-selfdrivingcar/files/Port+Forwarding.pdf).
 
+Note that the latest version of the simulator has two test tracks:
+- A highway test track with traffic lights
+- A testing lot test track
+
+To use the second test lot, you will need to update your code to specify a new set of waypoints. We'll discuss how to do this in a later lesson. Additionally, the first track has a toggle button for camera data. Many students have experienced latency when running the simulator together with a virtual machine, and leaving the camera data off as you develop the car's controllers will help with this issue.
+
+Finally, the simulator displays vehicle velocity in units of mph. However, all values used within the project code are use the metric system (m or m/s), including current velocity data coming from the simulator.
+
 ## Project repo instructions
 
 Below are the project repo instructions for those who want to execute this project on their own computers (I ran mine on Udacity provided workspace).
