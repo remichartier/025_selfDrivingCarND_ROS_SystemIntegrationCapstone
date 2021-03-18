@@ -6,6 +6,27 @@ Self-Driving Car Engineer Nanodegree Program
 Note : 
 - For Udacity evaluation, the write-up report is in [WRITE-UP.md](WRITE-UP.md).
 
+## Project Introduction
+
+This project requires to write ROS nodes to implement core functionality of the autonomous vehicle system, including traffic light detection, control, and waypoint following. This project code can be tested using a simulator that mimics the functionality on Carla (Udacity self-driving car).
+
+- Traffic light classification is an optional, stand out suggestion for the project. This is at least suggested to make an attempt at a working traffic light classifier, but it is not required for passing the project. If not doing so, light information can be pulled directly from the simulator to perform stop and go actions at intersections, if desired.
+
+## Project Setup
+
+The project requires the use of Ubuntu Linux (the operating system of Carla) and a new simulator. To reduce installation difficulties, Udacity students can use the provided an in-browser Workspace to work with. If not using Udacity Workspace, follow the steps below to get set up:
+
+- Because ROS is used, you will need to use Ubuntu to develop and test your project code. You may use
+  - Ubuntu 14.04 with ROS Indigo
+  - Ubuntu 16.04 with ROS Kinetic
+  - You are welcome to use your own Ubuntu installation or virtual machine (unsupported), or you can use the VM provided in Your Virtual Machine in the "Introduction to ROS" lesson. The provided VM has ROS and Dataspeed DBW installed already.
+
+- Windows 10 users - your fellow students have suggested that the best local option is to use the VM for ROS, while running the simulator natively (and making sure to open ports between the two for communication).
+
+- The system integration project uses its own simulator which will interface with your ROS code and has traffic light detection. You can download the simulator [here](https://github.com/udacity/CarND-Capstone/releases). To improve performance while using a VM, we recommend downloading the simulator for your host operating system and using this outside of the VM. You will be able to run project code within the VM while running the simulator natively in the host using port forwarding on port 4567. For more information on how to set up port forwarding, see the end of the classroom concept [here](https://s3-us-west-1.amazonaws.com/udacity-selfdrivingcar/files/Port+Forwarding.pdf).
+
+## Project repo instructions
+
 Below are the project repo instructions for those who want to execute this project on their own computers (I ran mine on Udacity provided workspace).
 
 This is the project repo for the final project of the Udacity Self-Driving Car Nanodegree: Programming a Real Self-Driving Car. For more information about the project, see the project introduction [here](https://classroom.udacity.com/nanodegrees/nd013/parts/6047fe34-d93c-4f50-8336-b70ef10cb4b2/modules/e1a23b06-329a-4684-a717-ad476f0d8dff/lessons/462c933d-9f24-42d3-8bdc-a08a5fc866e4/concepts/5ab4b122-83e6-436d-850f-9f4d26627fd9).
