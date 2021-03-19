@@ -262,7 +262,8 @@ styx_msgs/Waypoint[] waypoints
         closest_waypoint_idx = get_closest_waypoint_idx_generic(x=pose.pose.position.x,
                                                                 y=pose.pose.position.y,
                                                                 waypoint_tree=self.waypoint_tree,
-                                                                waypoints_2d=self.waypoints_2d)
+                                                                waypoints_2d=self.waypoints_2d,
+                                                                need_next=False)
         
         
         # index of the closest waypoint in self.waypoints
@@ -333,16 +334,18 @@ styx_msgs/Waypoint[] waypoints
             car_position_idx = get_closest_waypoint_idx_generic(self.pose.pose.position.x,
                                                                 self.pose.pose.position.y,
                                                                 waypoint_tree=self.waypoint_tree,
-                                                                waypoints_2d=self.waypoints_2d)
+                                                                waypoints_2d=self.waypoints_2d,
+                                                                need_next=False)
 
         #TODO find the closest visible traffic light (if one exists)
             light_waypoint_idx_dict = {}
             for i in range(len(stop_line_positions)):
                 pos = stop_line_positions[i]
                 light_waypoint_idx_dict[i] = get_closest_waypoint_idx_generic(x=pos[0],
-                                                                y=pos[1],
-                                                                waypoint_tree=self.waypoint_tree,
-                                                                waypoints_2d=self.waypoints_2d)
+                                                                              y=pos[1],
+                                                                              waypoint_tree=self.waypoint_tree,
+                                                                              waypoints_2d=self.waypoints_2d,
+                                                                              need_next=False)
             # sort those indexes
             if len(light_waypoint_idx_dict) != 0:
                 """ The sorted(dict1, key=dict1.get) expression will return
@@ -350,11 +353,11 @@ styx_msgs/Waypoint[] waypoints
                 """
                 sorted_key_list = sorted(light_waypoint_idx_dict, key=light_waypoint_idx_dict.get)
                 i = 0
-                while car_position_idx > light_waypoint_idx_dict[sorted_key_list[i]] and i < len(sorted_key_list) :
+                while car_position_idx > light_waypoint_idx_dict[sorted_key_list[i]] and i < len(sorted_key_list) -1:
                     i += 1
                 # exit conditions : found car_position_idx < light_waypoint_idx_dict[sorted_key_list[i]]
-                # OR : i = len(sorted_key_list)
-                if i < len(sorted_key_list) :      # ie if found a light in the list, ahead of vehicle
+                # OR : i = len(sorted_key_list) -1
+                if i < len(sorted_key_list) -1:      # ie if found a light in the list, ahead of vehicle
                     light_idx = sorted_key_list[i]
                     light_stopline_wp = light_waypoint_idx_dict[light_idx]
                     closest_light = self.lights[light_idx]
