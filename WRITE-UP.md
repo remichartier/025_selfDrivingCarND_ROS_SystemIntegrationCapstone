@@ -67,7 +67,7 @@ Control and Planning Criteria | Criteria to meet specifications
 Waypoints are published to plan Carla’s route around the track. | Waypoints should be published to `/final_waypoints` to plan the vehicle’s path around the track. No unnecessary moves (excessive lane changes, unnecessary turning, unprompted stops) should occur. As in the Path Planning project, acceleration should not exceed 10 m/s^2 and jerk should not exceed 10 m/s^3. Be sure to limit the top speed of the vehicle to the km/h velocity set by the velocity rosparam in `waypoint_loader`.
 
 - For publication of `/final_waypoints`, I had to modify the original value of `LOOKAHEAD_WPS`, initially set to 250 waypoints. However this number of waypoints make the steering and yaw_controller impossible to control the steering, the vehicle would drift and oscillate left and right around the waypoints lane until loosing steering control and drive out of the road.
-  - I had to set this constant to 50 waypoints. Even something like 75 waypoints would cause the vehicle to drive away off the road later on in the track. 
+  - I had to set this constant to 50 waypoints. Even something like 75 waypoints would cause the vehicle to drive away off the road later on in the track. I really do not know why yet. 
 
 - lane changes / unnecessary turning : Initial steering control using Autoware code (`waypoint_follower`) would be very harsh, due to steering error threshold being too loose. (5.0 radians). I reduced it to `relative_angle_threshold_(0.1)` in order to trigger more quickly the steering PID control, in Autoware code `pure_pursuit_core.h`
   - I also removed the distance threshold before Autoware code would start to correct steering drift, in `pure_pursuit_core.h`
@@ -89,14 +89,24 @@ Successfully navigate the full track more than once. | The vehicle is able to co
 
 - Nothing special to comment on that. It is working as expected. The vehicle navigates until the end of the waypoints.
 
+## Stopping at the traffic line stop
 
-- Utilize a detection and classification model for stop lights. The model should appropriately detect and classify stop lights at intersections at least 80% of the time. Make sure to provide instructions for obtaining the necessary model used, as well as any additional necessary dependencies and setup.
-- Waypoints and controls are adjusted based on detections. When approaching a red light, the vehicle should slow and come to a complete stop (if the light is still red). When the light switches back to green, the vehicle should accelerate back up to the desired speed. When approaching a green light, the vehicle should continue normally on its path.
-- Include a write-up concerning different models you tried out for the stop light detection, and results on those models.
-- Include a write-up concerning any data gathering efforts you performed for the stop lights, as well as any data augmentation.
-- Get as close to 100% accuracy as you can with stop light detection and classification - without just overfitting the simulator!
+- The stop line positions, provided by the `/traffic_light_config`, does not seem accurate, because on some traffic lights, if following those informations, vehicle stops sometimes few meters after the stop line position. 
+- I fixed this issue by stopping the car 13 way points before the closest waypoint of the stop line position. So sometimes the car would stop 1 or 2 meters before the stop line position, or sometimes it would stop at the line position. I think this innacuracy is largely due to lack of accuracy of the `/traffic_light_config` line position info.
 
-Additional improvements to be done in future : 
--
--
+cf in `waypoint_updater.py` : Project lesson was suggesting to stop the car 2 waypoints before stop line. I had to increase to 12 waypoints in order to make sure it would stop before the stop line of every traffic line on this track and simulator. 
+```
+stop_idx = max(self.stopline_wp_idx - closest_idx -12, 0) # 2 waypoints back from line so front of car stops at line.
+```
+
+## Additional improvements to be done in future : 
+
+### Traffic Light Detection
+
+- I skipped it as it was optional. I will come back to it after I graduate. So for time being, traffic light info is collected via `/vehicle/traffic_lights` topic/msg, and used to retrive traffic light colors instead of using a classification model based on camera images.
+
+### Object Detection
+
+- I skipped it as it was optional. I will come back to it after I graduate.
+
 -
