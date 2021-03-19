@@ -109,4 +109,3 @@ stop_idx = max(self.stopline_wp_idx - closest_idx -12, 0) # 2 waypoints back fro
 
 - I skipped it as it was optional. I will come back to it after I graduate.
 
--
