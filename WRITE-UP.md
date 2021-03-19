@@ -66,14 +66,28 @@ Control and Planning Criteria | Criteria to meet specifications
 -------------------- | -------------------------------
 Waypoints are published to plan Carla’s route around the track. | Waypoints should be published to `/final_waypoints` to plan the vehicle’s path around the track. No unnecessary moves (excessive lane changes, unnecessary turning, unprompted stops) should occur. As in the Path Planning project, acceleration should not exceed 10 m/s^2 and jerk should not exceed 10 m/s^3. Be sure to limit the top speed of the vehicle to the km/h velocity set by the velocity rosparam in `waypoint_loader`.
 
+- For publication of `/final_waypoints`, I had to modify the original value of `LOOKAHEAD_WPS`, initially set to 250 waypoints. However this number of waypoints make the steering and yaw_controller impossible to control the steering, the vehicle would drift and oscillate left and right around the waypoints lane until loosing steering control and drive out of the road.
+  - I had to set this constant to 50 waypoints. Even something like 75 waypoints would cause the vehicle to drive away off the road later on in the track. 
+
+- lane changes / unnecessary turning : Initial steering control using Autoware code (`waypoint_follower`) would be very harsh, due to steering error threshold being too loose. (5.0 radians). I reduced it to `relative_angle_threshold_(0.1)` in order to trigger more quickly the steering PID control, in Autoware code `pure_pursuit_core.h`
+  - I also removed the distance threshold before Autoware code would start to correct steering drift, in `pure_pursuit_core.h`
+
+```
+  // if (displacement < displacement_threshold_ && relative_angle < relative_angle_threshold_)
+  if (relative_angle < relative_angle_threshold_)
+```
 
 Control and Planning Criteria | Criteria to meet specifications
 -------------------- | -------------------------------
 Controller commands are published to operate Carla’s throttle, brake, and steering. | `dbw_node.py` has been implemented to calculate and provide appropriate throttle, brake, and steering commands. The commands are published to `/vehicle/throttle_cmd`, `/vehicle/brake_cmd` and `/vehicle/steering_cmd`, as applicable.
 
+- Nothing special to comment on that. It is working as expected.
+
 Successful NavigationCriteria | Criteria to meet specifications
 -------------------- | -------------------------------
 Successfully navigate the full track more than once. | The vehicle is able to complete more than one full loop of the track without running off road or any other navigational issues (incorrect turns, random stops, teleportation, etc.).
+
+- Nothing special to comment on that. It is working as expected. The vehicle navigates until the end of the waypoints.
 
 
 - Utilize a detection and classification model for stop lights. The model should appropriately detect and classify stop lights at intersections at least 80% of the time. Make sure to provide instructions for obtaining the necessary model used, as well as any additional necessary dependencies and setup.
