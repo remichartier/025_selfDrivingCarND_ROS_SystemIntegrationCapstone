@@ -89,9 +89,9 @@ Successfully navigate the full track more than once. | The vehicle is able to co
 
 - Nothing special to comment on that. It is working as expected. The vehicle navigates until the end of the waypoints.
 
-## Stopping at the traffic line stop
+## Stopping at or before the traffic stop line
 
-- The stop line positions, provided by the `/traffic_light_config`, does not seem accurate, because on some traffic lights, if following those informations, vehicle stops sometimes few meters after the stop line position. 
+- The stop line positions, provided by the `/traffic_light_config`, do not seem accurate, because on some traffic lights, if following those information data, vehicle would sometimes stop few meters after the stop line position. 
 - I fixed this issue by stopping the car 13 way points before the closest waypoint of the stop line position. So sometimes the car would stop 1 or 2 meters before the stop line position, or sometimes it would stop at the line position. I think this innacuracy is largely due to lack of accuracy of the `/traffic_light_config` line position info.
 
 cf in `waypoint_updater.py` : Project lesson was suggesting to stop the car 2 waypoints before stop line. I had to increase to 12 waypoints in order to make sure it would stop before the stop line of every traffic line on this track and simulator. 
