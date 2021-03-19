@@ -12,6 +12,8 @@ This project requires to write ROS nodes to implement core functionality of the 
 
 - Traffic light classification is an optional, stand out suggestion for the project. This is at least suggested to make an attempt at a working traffic light classifier, but it is not required for passing the project. If not doing so, light information can be pulled directly from the simulator to perform stop and go actions at intersections, if desired.
 
+![screenshot](imgs/SimulatorScreenshot.png)
+
 ## Project Setup
 
 The project requires the use of Ubuntu Linux (the operating system of Carla) and a new simulator. To reduce installation difficulties, Udacity students can use the provided an in-browser Workspace to work with. If not using Udacity Workspace, follow the steps below to get set up:
