@@ -6,6 +6,10 @@ Self-Driving Car Engineer Nanodegree Program
 Note : 
 - For Udacity evaluation, the write-up report is in [WRITE-UP.md](WRITE-UP.md).
 
+- Setup Video on Youtube : https://youtu.be/dlzWU6_vpxA
+
+- Video of current implementation on Youtube (11+ mins) : https://youtu.be/Wc5q0s_A7mc
+
 ## Project Introduction
 
 This project requires to write ROS nodes to implement core functionality of the autonomous vehicle system, including traffic light detection, control, and waypoint following. This project code can be tested using a simulator that mimics the functionality on Carla (Udacity self-driving car).
